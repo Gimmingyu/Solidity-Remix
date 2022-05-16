@@ -1,4 +1,4 @@
-pragma solidity >=0.4.22 <=0.6.0;
+pragma solidity >=0.4.22 <0.9.0;
 
 contract BlindAuction {
 
@@ -7,18 +7,19 @@ contract BlindAuction {
         uint deposit;
     }
 
-    // state will be set by beneficiary  
+    // enum으로 상태 표시 
     enum Phase {Init, Bidding, Reveal, Done}  
     Phase public state = Phase.Init; 
 
+	// 의장이자 수혜자 ? 
     address payable beneficiary; //owner  
-    mapping(address => Bid) bids;  
+    mapping(address => Bid) bids;  // 주소당 1회만 입찰 가능 
 
-
+	// 가장 많은 금액을 bidding한 사람
     address public highestBidder; 
     uint public highestBid = 0;   
     
-    mapping(address => uint) depositReturns; 
+    mapping(address => uint) depositReturns; // 탈락한 계정 예치금반환
     //modifiers
     modifier validPhase(Phase reqPhase) 
     { require(state == reqPhase); 
@@ -30,7 +31,8 @@ contract BlindAuction {
       _;
    }
 
-constructor(  ) public {    
+	constructor() {
+		// constructor가 수혜자를 설정.
         beneficiary = msg.sender;
         state = Phase.Bidding;
     }
@@ -40,15 +42,18 @@ constructor(  ) public {
         state = x;
     }
     
+	// 블라인드 경매 함수
     function bid(bytes32 blindBid) public payable validPhase(Phase.Bidding)
-    {  
-        bids[msg.sender] = Bid({
+    {
+		// bids의 msg.sender의 value를 Bid 구조체를 이용해 넣어둔다.
+ 		bids[msg.sender] = Bid({
             blindedBid: blindBid,
             deposit: msg.value
         });
     }
     
-    function reveal(uint value, bytes32 secret) public   validPhase(Phase.Reveal){
+
+    function reveal(uint value, bytes32 secret) public validPhase(Phase.Reveal){
         uint refund = 0;
             Bid storage bidToCheck = bids[msg.sender];
             if (bidToCheck.blindedBid == keccak256(abi.encodePacked(value, secret))) {
@@ -57,7 +62,6 @@ constructor(  ) public {
                 if (placeBid(msg.sender, value))
                     refund -= value;
             }}
-            
         msg.sender.transfer(refund);
     }
 

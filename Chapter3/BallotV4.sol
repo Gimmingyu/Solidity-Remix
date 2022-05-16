@@ -9,7 +9,7 @@ contract BallotV4 {
     struct Proposal {                  
         uint voteCount;
     }
-
+	ㄴ
     address chairperson;
     mapping(address => Voter) voters;  
     Proposal[] proposals;
