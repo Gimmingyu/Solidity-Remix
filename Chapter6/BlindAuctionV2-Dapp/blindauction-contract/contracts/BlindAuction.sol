@@ -1,4 +1,4 @@
-pragma solidity >=0.4.22 <=0.6.0;
+pragma solidity ^0.8.13;
 
 
 contract BlindAuction {
@@ -36,8 +36,8 @@ contract BlindAuction {
         _;
     }
 
-    constructor() public {
-        beneficiary = msg.sender;
+    constructor() {
+        beneficiary = payable(msg.sender);
         // advancePhase();
     }
 
@@ -65,7 +65,7 @@ contract BlindAuction {
 
     function reveal(uint value, bytes32 secret) public validPhase(Phase.Reveal) {
         require(msg.sender != beneficiary,'beneficiaryReveal');
-        uint refund = 0;
+		uint refund = 0;
         Bid storage bidToCheck = bids[msg.sender];
 
         if (bidToCheck.blindedBid == keccak256(abi.encodePacked(value, secret))) {
@@ -75,7 +75,7 @@ contract BlindAuction {
                     refund -= value * 1000000000000000000;
             }
         }
-        msg.sender.transfer(refund);
+        payable(msg.sender).transfer(refund);
     }
 
     // This is an "internal" function which means that it
@@ -101,7 +101,7 @@ contract BlindAuction {
         uint amount = pendingReturns[msg.sender];
         if (amount > 0) {
             pendingReturns[msg.sender] = 0;
-            msg.sender.transfer(amount);
+            payable(msg.sender).transfer(amount);
         }
     }
 
